@@ -112,6 +112,35 @@
 
 <script>
 const PEPTIDES = ["MOTS-C","NAD+","Retatrutide","GHK-Cu","Tesamorelin","BPC-157","TB-500","KPV","Semax","PT-141","5-Amino-1MQ","CJC-1295","Ipamorelin","Selank","AOD-9604","Other"];
+
+// Compact transform: shrinks the link by using index codes and arrays instead of verbose keys.
+function toCompact(s){
+  return {
+    n: s.n||'',
+    pw: s.pw||'',
+    d: (s.days||[]).map(day=>[
+      day.date,
+      (day.rows||[]).map(r=>{
+        const idx=PEPTIDES.indexOf(r.p);
+        return [idx>=0?idx:r.p, r.s, r.n||''];
+      })
+    ])
+  };
+}
+function fromCompact(c){
+  return {
+    n: c.n||'',
+    pw: c.pw||'',
+    days: (c.d||[]).map(([date,rows])=>({
+      date,
+      rows:(rows||[]).map(([pi,s,n],idx)=>({
+        id: date+'_'+idx,
+        p: typeof pi==='number'?(PEPTIDES[pi]||'?'):pi,
+        s, n
+      }))
+    }))
+  };
+}
 const ADMIN_PASSWORD = "Islam.1234";
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
@@ -135,7 +164,14 @@ function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('en-US
 function fmtShortDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('en-US',
   {year:'numeric',month:'2-digit',day:'2-digit'});}catch(e){return d;}}
 function weekdayOf(d){try{return new Date(d+'T00:00:00').toLocaleDateString('en-US',{weekday:'long'});}catch(e){return '';}}
-function getPayload(){const m=location.hash.match(/d=([A-Za-z0-9\-_]+)/);return m?decodeData(m[1]):null;}
+function getPayload(){
+  const m=location.hash.match(/d=([A-Za-z0-9\-_]+)/);
+  if(!m)return null;
+  const c=decodeData(m[1]);
+  if(!c)return null;
+  if(c.days)return c; // old format link, already in full shape
+  return fromCompact(c);
+}
 function isSandboxed(){
   const h=location.href;
   return h.startsWith('blob:')||h.startsWith('about:')||h.startsWith('data:')||location.protocol==='file:';
@@ -271,7 +307,7 @@ function renderLogin(){
   document.getElementById('pw').focus();
 }
 
-function buildLink(){return location.href.split('#')[0]+'#d='+encodeData(state);}
+function buildLink(){return location.href.split('#')[0]+'#d='+encodeData(toCompact(state));}
 
 function renderAdmin(){
   if(!unlocked){renderLogin();return;}
@@ -424,31 +460,3 @@ function showClientWithAdminEntry(data){
           <button id="cpwgo" style="width:100%;">View My Schedule</button>
           <div id="cpwerr" style="color:var(--danger);font-size:12px;margin-top:10px;text-align:center;display:none;">Incorrect password</div>
         </div>
-      </main>`;
-    const go=()=>{
-      if(document.getElementById('cpwgate').value===data.pw){
-        renderClientView(data);
-        attachAdminEntry(data);
-      }else{
-        document.getElementById('cpwerr').style.display='block';
-      }
-    };
-    document.getElementById('cpwgo').onclick=go;
-    document.getElementById('cpwgate').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
-    document.getElementById('cpwgate').focus();
-  }else{
-    renderClientView(data);
-    attachAdminEntry(data);
-  }
-}
-function route(){
-  const d=getPayload();
-  if(unlocked)renderAdmin();
-  else if(d)showClientWithAdminEntry(d);
-  else renderAdmin();
-}
-window.addEventListener('hashchange',route);
-route();
-</script>
-</body>
-</html>

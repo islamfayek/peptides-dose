@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peptides Daily Doses</title>
+<style>
+  :root{
+    --bg:#f4f8fc; --panel:#ffffff; --panel2:#eaf3fb; --banner:#d7e9f8;
+    --line:#a9c8e3; --navy:#1c3f63; --navy-soft:#2e5c8a; --muted:#5c7a97;
+    --danger:#c0463f; --ok:#1f7a4d; --text:#1c3f63;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,sans-serif;min-height:100vh;}
+  .serif{font-family:Georgia,'Times New Roman',serif;}
+  .mono{font-family:'Courier New',monospace;letter-spacing:.5px;}
+  header{padding:24px 20px;background:var(--banner);border-bottom:1px solid var(--line);}
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-mark{width:42px;height:42px;border-radius:10px;background:var(--navy);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:18px;flex-shrink:0;}
+  h1{font-size:18px;margin:0;color:var(--navy);letter-spacing:.5px;}
+  .sub{color:var(--navy-soft);font-size:13px;margin-top:2px;}
+  main{max-width:900px;margin:0 auto;padding:22px 18px 80px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px;
+    box-shadow:0 1px 3px rgba(28,63,99,.06);}
+  .card h2{font-size:15px;margin:0 0 14px;color:var(--navy);border-bottom:1px solid var(--panel2);padding-bottom:10px;}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;}
+  input,select,textarea{width:100%;background:#fff;border:1px solid var(--line);color:var(--text);
+    padding:10px 12px;border-radius:8px;font-size:14px;margin-bottom:12px;font-family:inherit;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy-soft);}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row > div{flex:1;min-width:135px;}
+  button,.btn{background:var(--navy);color:#fff;border:none;padding:11px 18px;border-radius:8px;
+    font-weight:700;font-size:14px;cursor:pointer;display:inline-block;text-decoration:none;text-align:center;}
+  button.ghost,.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--navy);font-weight:600;}
+  button.ok{background:var(--ok);}
+  button.danger{background:transparent;border:1px solid var(--danger);color:var(--danger);
+    font-weight:600;padding:5px 11px;font-size:12px;}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:18px 0;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;
+    padding:11px 20px;border-radius:8px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;
+    pointer-events:none;max-width:82%;text-align:center;z-index:99;}
+  .toast.show{opacity:1;}
+  .hero{text-align:center;padding:26px 0 8px;}
+  .hero .name{font-size:25px;font-weight:700;color:var(--navy);}
+  .hint{font-size:12px;color:var(--muted);line-height:1.65;margin:0 0 14px;}
+  .warn{background:#fff6e5;border:1px solid #e0b869;border-radius:10px;padding:12px 14px;
+    font-size:12px;line-height:1.6;color:#7a5510;margin-bottom:14px;}
+  .weekday{display:inline-block;background:var(--navy);color:#fff;font-size:12px;font-weight:700;
+    padding:5px 13px;border-radius:20px;margin-bottom:12px;}
+  .stage{border:1px dashed var(--line);border-radius:10px;padding:12px;background:#fafdff;margin-bottom:14px;}
+  .stagerow{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:8px 4px;border-bottom:1px solid var(--panel2);font-size:14px;}
+  .stagerow:last-child{border-bottom:none;}
+  .daychip{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+    padding:11px 13px;margin-bottom:8px;}
+  .daychip .dnm{font-weight:700;font-size:14px;color:var(--navy);}
+  .daychip .dct{font-size:12px;color:var(--muted);margin-top:2px;}
+  .linkout{font-size:11px;word-break:break-all;background:var(--panel2);border:1px solid var(--line);
+    border-radius:8px;padding:11px;color:var(--navy);max-height:110px;overflow:auto;}
+  .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+
+  /* Printed-card look */
+  .dosecard{background:#fff;border:1px solid var(--navy-soft);border-radius:12px;
+    overflow:hidden;margin-bottom:20px;box-shadow:0 1px 4px rgba(28,63,99,.10);}
+  .dosecard-head{background:var(--banner);text-align:center;padding:15px 12px 13px;
+    color:var(--navy);font-size:18px;letter-spacing:2px;line-height:1.25;border-bottom:1px solid var(--line);}
+  .dosecard-head .plus{font-size:23px;font-weight:700;line-height:1;margin-bottom:3px;}
+  .dosecard-body{padding:18px 16px 20px;}
+  .field{display:flex;align-items:baseline;gap:10px;margin-bottom:13px;}
+  .flabel{font-weight:700;color:var(--navy);font-size:14px;white-space:nowrap;}
+  .fline{flex:1;border-bottom:1px solid var(--line);padding-bottom:3px;font-size:14px;
+    color:var(--navy-soft);min-height:20px;}
+  .dosetable{width:100%;border-collapse:collapse;margin-top:16px;border:1px solid var(--navy-soft);}
+  .dosetable th{background:var(--banner);color:var(--navy);text-align:center;
+    font-size:13px;font-weight:700;padding:11px 8px;border:1px solid var(--navy-soft);}
+  .dosetable td{text-align:center;font-size:14px;padding:13px 8px;border:1px solid var(--line);color:var(--navy);}
+  .dosetable tr:nth-child(even) td{background:#f7fbff;}
+  .molecule{display:flex;justify-content:center;margin-bottom:6px;}
+  .row2field{display:flex;gap:16px;}
+  .row2field .field{flex:1;}
+  .cardfoot{text-align:center;font-style:italic;color:var(--navy-soft);font-size:12px;
+    margin-top:16px;padding-top:12px;border-top:1px solid var(--panel2);}
+  .helpbox{text-align:center;padding:20px 0 10px;}
+  .helptitle{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px;}
+  .wabtn{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;
+    text-decoration:none;padding:11px 22px;border-radius:24px;font-weight:700;font-size:14px;}
+
+  .progresswrap{margin:14px 0 4px;}
+  .progressbar{background:var(--panel2);border-radius:20px;height:8px;overflow:hidden;border:1px solid var(--line);}
+  .progressfill{background:var(--navy-soft);height:100%;width:0%;border-radius:20px;transition:width .3s ease;}
+  .progresslabel{font-size:11px;color:var(--muted);margin-top:6px;text-align:right;}
+  .checklist{margin-top:12px;}
+  .dose-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--panel2);}
+  .dose-row:last-child{border-bottom:none;}
+  .chk{width:24px;height:24px;border-radius:8px;border:2px solid var(--navy-soft);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+  .chk.checked{background:var(--navy);border-color:var(--navy);}
+  .chk svg{width:14px;height:14px;stroke:#fff;stroke-width:3;fill:none;display:none;}
+  .chk.checked svg{display:block;}
+  .dose-info{flex:1;}
+  .dose-name{font-weight:700;font-size:15px;color:var(--navy);}
+  .dose-amt{font-size:13px;color:var(--navy-soft);font-weight:700;margin-top:1px;}
+  .dose-note{font-size:12px;color:var(--muted);margin-top:2px;}
+  .dose-row.done .dose-name,.dose-row.done .dose-amt{text-decoration:line-through;opacity:.45;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const PEPTIDES = ["MOTS-C","NAD+","Retatrutide","GHK-Cu","Tesamorelin","BPC-157","TB-500","KPV","Semax","PT-141","5-Amino-1MQ","CJC-1295","Ipamorelin","Selank","AOD-9604","Other"];
+
+// Compact transform: shrinks the link by using index codes and arrays instead of verbose keys.
+function toCompact(s){
+  return {
+    n: s.n||'',
+    pw: s.pw||'',
+    d: (s.days||[]).map(day=>[
+      day.date,
+      (day.rows||[]).map(r=>{
+        const idx=PEPTIDES.indexOf(r.p);
+        return [idx>=0?idx:r.p, r.s, r.n||''];
+      })
+    ])
+  };
+}
+function fromCompact(c){
+  return {
+    n: c.n||'',
+    pw: c.pw||'',
+    days: (c.d||[]).map(([date,rows])=>({
+      date,
+      rows:(rows||[]).map(([pi,s,n],idx)=>({
+        id: date+'_'+idx,
+        p: typeof pi==='number'?(PEPTIDES[pi]||'?'):pi,
+        s, n
+      }))
+    }))
+  };
+}
+const ADMIN_PASSWORD = "Islam.1234";
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);}
+function uid(){return Math.random().toString(36).slice(2,8);}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function encodeData(o){
+  const b=new TextEncoder().encode(JSON.stringify(o));let s='';
+  b.forEach(x=>s+=String.fromCharCode(x));
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function decodeData(str){
+  try{let s=str.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';
+    const bin=atob(s);const b=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(b));}catch(e){return null;}
+}
+function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('en-US',
+  {weekday:'long',year:'numeric',month:'short',day:'numeric'});}catch(e){return d;}}
+function fmtShortDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('en-US',
+  {year:'numeric',month:'2-digit',day:'2-digit'});}catch(e){return d;}}
+function weekdayOf(d){try{return new Date(d+'T00:00:00').toLocaleDateString('en-US',{weekday:'long'});}catch(e){return '';}}
+function getPayload(){
+  const m=location.hash.match(/d=([A-Za-z0-9\-_]+)/);
+  if(!m)return null;
+  const c=decodeData(m[1]);
+  if(!c)return null;
+  if(c.days)return c; // old format link, already in full shape
+  return fromCompact(c);
+}
+function isSandboxed(){
+  const h=location.href;
+  return h.startsWith('blob:')||h.startsWith('about:')||h.startsWith('data:')||location.protocol==='file:';
+}
+
+// ---------------- CLIENT VIEW ----------------
+function linkKey(){
+  let h=0, s=location.hash;
+  for(let i=0;i<s.length;i++){ h=((h<<5)-h+s.charCodeAt(i))|0; }
+  return 'dosecheck_'+h;
+}
+function loadChecked(){
+  try{ return JSON.parse(localStorage.getItem(linkKey())||'{}'); }catch(e){ return {}; }
+}
+function saveChecked(obj){
+  try{ localStorage.setItem(linkKey(), JSON.stringify(obj)); }catch(e){}
+}
+
+function renderClientView(data){
+  const days=(data.days||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const total=days.reduce((n,d)=>n+d.rows.length,0);
+  const checked=loadChecked();
+  const cards=days.length?days.map(d=>`
+    <div class="dosecard">
+      <div class="dosecard-head serif">
+        <div class="molecule">
+          <svg viewBox="0 0 120 40" width="90" height="30">
+            <circle cx="20" cy="26" r="7" fill="none" stroke="#1c3f63" stroke-width="2"/>
+            <circle cx="40" cy="14" r="7" fill="none" stroke="#1c3f63" stroke-width="2"/>
+            <circle cx="60" cy="10" r="7" fill="none" stroke="#1c3f63" stroke-width="2"/>
+            <circle cx="80" cy="14" r="7" fill="none" stroke="#1c3f63" stroke-width="2"/>
+            <circle cx="100" cy="26" r="7" fill="none" stroke="#1c3f63" stroke-width="2"/>
+            <line x1="26" y1="22" x2="34" y2="18" stroke="#1c3f63" stroke-width="2"/>
+            <line x1="46" y1="12" x2="54" y2="11" stroke="#1c3f63" stroke-width="2"/>
+            <line x1="66" y1="11" x2="74" y2="13" stroke="#1c3f63" stroke-width="2"/>
+            <line x1="86" y1="18" x2="94" y2="22" stroke="#1c3f63" stroke-width="2"/>
+          </svg>
+        </div>
+        PEPTIDES<br>DAILY DOSES
+      </div>
+      <div class="dosecard-body">
+        <div class="field"><span class="flabel">Customer Name:</span><span class="fline">${esc(data.n||'')}</span></div>
+        <div class="row2field">
+          <div class="field"><span class="flabel">Day:</span><span class="fline">${weekdayOf(d.date)}</span></div>
+          <div class="field"><span class="flabel">Date:</span><span class="fline">${fmtShortDate(d.date)}</span></div>
+        </div>
+        <div class="progresswrap">
+          <div class="progressbar"><div class="progressfill" data-day="${d.date}" style="width:0%"></div></div>
+          <div class="progresslabel" data-daylabel="${d.date}">0 / ${d.rows.length} completed</div>
+        </div>
+        <div class="checklist" data-daylist="${d.date}">
+          ${d.rows.map(r=>{
+            const cid=d.date+'__'+r.id;
+            const isDone=!!checked[cid];
+            return `
+            <div class="dose-row${isDone?' done':''}" data-chk-id="${cid}">
+              <div class="chk${isDone?' checked':''}"><svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg></div>
+              <div class="dose-info">
+                <div class="dose-name">${esc(r.p)}</div>
+                <div class="dose-amt mono">${esc(r.s)}</div>
+                ${r.n?`<div class="dose-note">${esc(r.n)}</div>`:''}
+              </div>
+            </div>`;}).join('')}
+        </div>
+        <div class="cardfoot">Store refrigerated 2–8°C · Keep out of light</div>
+      </div>
+    </div>`).join(''):`<div class="empty">No doses recorded yet.</div>`;
+
+  document.getElementById('app').innerHTML=`
+    <header><div class="brand"><div class="brand-mark serif">Rx</div><div>
+      <h1 class="serif">PEPTIDES DAILY DOSES</h1>
+      <div class="sub">Your personal dosing protocol</div></div></div></header>
+    <main>
+      <div class="hero"><div class="name serif">${esc(data.n||'Client')}</div>
+      <div class="sub mono">${days.length} day(s) · ${total} dose(s)</div></div>
+      ${cards}
+      <div class="helpbox">
+        <div class="helptitle">Need Help?</div>
+        <a class="wabtn" href="https://wa.me/201114805561" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.004 2C6.486 2 2.01 6.476 2.01 11.994c0 2.114.552 4.096 1.516 5.815L2 22l4.316-1.484A9.936 9.936 0 0 0 12.004 22C17.522 22 22 17.524 22 12.006 22 6.487 17.522 2.01 12.004 2.01zm0 18.033a8.02 8.02 0 0 1-4.09-1.12l-.293-.174-2.56.88.86-2.494-.19-.306a8.005 8.005 0 0 1-1.234-4.286c0-4.42 3.596-8.014 8.017-8.014 4.42 0 8.015 3.594 8.015 8.014 0 4.42-3.595 8.014-8.016 8.014z"/></svg>
+          Chat on WhatsApp
+        </a>
+      </div>
+    </main>`;
+
+  // Restore progress bars from persisted state
+  days.forEach(d=>{
+    const list=document.querySelector(`.checklist[data-daylist="${d.date}"]`);
+    const rows=list.querySelectorAll('.dose-row');
+    const doneCount=list.querySelectorAll('.dose-row.done').length;
+    const pct=rows.length?Math.round((doneCount/rows.length)*100):0;
+    document.querySelector(`.progressfill[data-day="${d.date}"]`).style.width=pct+'%';
+    document.querySelector(`.progresslabel[data-daylabel="${d.date}"]`).textContent=doneCount+' / '+rows.length+' completed';
+  });
+
+  document.querySelectorAll('.dose-row').forEach(row=>{
+    row.querySelector('.chk').onclick=()=>{
+      row.classList.toggle('done');
+      row.querySelector('.chk').classList.toggle('checked');
+      const cid=row.dataset.chkId;
+      const day=cid.split('__')[0];
+      const st=loadChecked();
+      st[cid]=row.classList.contains('done');
+      saveChecked(st);
+      const list=document.querySelector(`.checklist[data-daylist="${day}"]`);
+      const rows=list.querySelectorAll('.dose-row');
+      const doneCount=list.querySelectorAll('.dose-row.done').length;
+      const pct=Math.round((doneCount/rows.length)*100);
+      document.querySelector(`.progressfill[data-day="${day}"]`).style.width=pct+'%';
+      document.querySelector(`.progresslabel[data-daylabel="${day}"]`).textContent=doneCount+' / '+rows.length+' completed';
+    };
+  });
+}
+
+
+// ---------------- ADMIN ----------------
+let unlocked=false;
+let state={n:'',pw:'',days:[]};
+let stage={date:new Date().toISOString().slice(0,10),rows:[]};
+
+function renderLogin(){
+  document.getElementById('app').innerHTML=`
+    <main style="max-width:370px;margin:70px auto;">
+      <div class="card"><h2>Admin Login</h2>
+        <label>Password</label><input id="pw" type="password" placeholder="••••••••">
+        <button id="lbtn" style="width:100%;">Login</button>
+        <div id="perr" style="color:var(--danger);font-size:12px;margin-top:10px;display:none;">Incorrect password</div>
+      </div></main>`;
+  const go=()=>{if(document.getElementById('pw').value===ADMIN_PASSWORD){unlocked=true;renderAdmin();}
+    else document.getElementById('perr').style.display='block';};
+  document.getElementById('lbtn').onclick=go;
+  document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+  document.getElementById('pw').focus();
+}
+
+function buildLink(){return location.href.split('#')[0]+'#d='+encodeData(toCompact(state));}
+
+function renderAdmin(){
+  if(!unlocked){renderLogin();return;}
+  const link=buildLink();
+  const wa='https://wa.me/?text='+encodeURIComponent('Your peptide dosing protocol:\n'+link);
+  const savedDays=state.days.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  document.getElementById('app').innerHTML=`
+    <header><div class="brand"><div class="brand-mark serif">Rx</div><div>
+      <h1 class="serif">DOSING CONTROL PANEL</h1>
+      <div class="sub">Build a client protocol link</div></div></div></header>
+    <main>
+      ${isSandboxed()?`<div class="warn"><strong>Preview mode:</strong> this page is running in a sandbox, so the generated link will not open on anyone else's phone. Publish or host this file first, then links will work.</div>`:''}
+
+      <div class="card">
+        <h2>1 · Client</h2>
+        <label>Client Name</label>
+        <input id="cname" value="${esc(state.n)}" placeholder="e.g. Islam Fayek">
+        <label>Client Password (they'll need this to open their link)</label>
+        <input id="cpw" value="${esc(state.pw||'')}" placeholder="e.g. wagdy2026">
+      </div>
+
+      <div class="card">
+        <h2>2 · Build a Day</h2>
+        <label>Date</label>
+        <input id="sdate" type="date" value="${stage.date}">
+        <div class="weekday" id="wd">${weekdayOf(stage.date)||'—'}</div>
+
+        <div class="row">
+          <div><label>Peptide</label>
+            <select id="pep">${PEPTIDES.map(p=>`<option>${p}</option>`).join('')}</select></div>
+          <div><label>Dose</label><input id="dose" placeholder="e.g. 250 mcg"></div>
+        </div>
+        <label>Note (optional)</label>
+        <input id="rnote" placeholder="e.g. On morning">
+        <button class="ghost" id="addRow">+ Add Peptide to This Day</button>
+
+        <div class="stage" style="margin-top:14px;">
+          ${stage.rows.length?stage.rows.map(r=>`
+            <div class="stagerow"><span><strong>${esc(r.p)}</strong> — <span class="mono">${esc(r.s)}</span>${r.n?` <span style="color:var(--muted);font-size:12px;">(${esc(r.n)})</span>`:''}</span>
+            <button class="danger rmRow" data-id="${r.id}">Remove</button></div>`).join('')
+          :`<div class="empty" style="padding:8px 0;">No peptides added for this day yet.</div>`}
+        </div>
+
+        <button class="ok" id="doneDay">✓ Done — Save This Day</button>
+      </div>
+
+      <div class="card">
+        <h2>3 · Saved Days (${savedDays.length})</h2>
+        ${savedDays.length?savedDays.map(d=>`
+          <div class="daychip"><div>
+            <div class="dnm">${fmtDate(d.date)}</div>
+            <div class="dct">${d.rows.map(r=>esc(r.p)+' '+esc(r.s)).join(' · ')}</div></div>
+            <button class="danger rmDay" data-date="${d.date}">Delete</button></div>`).join('')
+        :`<div class="empty">No days saved yet.</div>`}
+      </div>
+
+      <div class="card">
+        <h2>4 · Send to Client</h2>
+        <p class="hint">Copy this link and send it to the client. Keep a copy for yourself — reopen it and press <strong>Admin</strong> to add more days later.</p>
+        <div class="linkout mono">${esc(link)}</div>
+        <div class="actions">
+          <button id="copyBtn">Copy Link</button>
+          <a class="btn ghost" id="waBtn" href="${esc(wa)}" target="_blank" rel="noopener">Send via WhatsApp</a>
+          <button class="ghost" id="newBtn">New Client</button>
+        </div>
+      </div>
+    </main>`;
+
+  document.getElementById('cname').oninput=e=>{state.n=e.target.value;};
+  document.getElementById('cpw').oninput=e=>{state.pw=e.target.value;};
+  document.getElementById('sdate').onchange=e=>{
+    stage.date=e.target.value;
+    document.getElementById('wd').textContent=weekdayOf(stage.date)||'—';
+  };
+
+  document.getElementById('addRow').onclick=()=>{
+    const s=document.getElementById('dose').value.trim();
+    if(!s){toast('Enter the dose');return;}
+    const n=document.getElementById('rnote').value.trim();
+    stage.rows.push({id:uid(),p:document.getElementById('pep').value,s,n});
+    state.n=document.getElementById('cname').value;state.pw=document.getElementById('cpw').value;
+    renderAdmin();
+  };
+
+  document.querySelectorAll('.rmRow').forEach(b=>b.onclick=()=>{
+    stage.rows=stage.rows.filter(r=>r.id!==b.dataset.id);
+    state.n=document.getElementById('cname').value;state.pw=document.getElementById('cpw').value;
+    renderAdmin();
+  });
+
+  document.getElementById('doneDay').onclick=()=>{
+    state.n=document.getElementById('cname').value;state.pw=document.getElementById('cpw').value;
+    if(!stage.rows.length){toast('Add at least one peptide first');return;}
+    if(!stage.date){toast('Pick a date');return;}
+    state.days=state.days.filter(d=>d.date!==stage.date);
+    state.days.push({date:stage.date,rows:stage.rows.slice()});
+    const next=new Date(stage.date+'T00:00:00');next.setDate(next.getDate()+1);
+    stage={date:next.toISOString().slice(0,10),rows:[]};
+    toast('Day saved — ready for the next one');
+    renderAdmin();
+  };
+
+  document.querySelectorAll('.rmDay').forEach(b=>b.onclick=()=>{
+    state.days=state.days.filter(d=>d.date!==b.dataset.date);
+    toast('Day deleted');renderAdmin();
+  });
+
+  document.getElementById('copyBtn').onclick=async()=>{
+    state.n=document.getElementById('cname').value;state.pw=document.getElementById('cpw').value;
+    const l=buildLink();
+    try{await navigator.clipboard.writeText(l);toast('Link copied');}
+    catch(e){
+      const ta=document.createElement('textarea');ta.value=l;
+      document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');toast('Link copied');}
+      catch(e2){toast('Copy failed — select the link manually');}
+      ta.remove();
+    }
+  };
+
+  document.getElementById('newBtn').onclick=()=>{
+    if(!confirm('Start a new client? Save the current link first.'))return;
+    state={n:'',pw:'',days:[]};
+    stage={date:new Date().toISOString().slice(0,10),rows:[]};
+    location.hash='';renderAdmin();
+  };
+}
+
+// ---------------- ROUTER ----------------
+function attachAdminEntry(data){
+  const f=document.createElement('div');
+  f.style.cssText='text-align:center;padding:0 0 40px;';
+  f.innerHTML='<button class="ghost" id="adminEntry" style="font-size:12px;padding:8px 16px;">Admin</button>';
+  document.getElementById('app').appendChild(f);
+  document.getElementById('adminEntry').onclick=()=>{
+    state={n:data.n||'',pw:data.pw||'',days:(data.days||[]).slice()};
+    stage={date:new Date().toISOString().slice(0,10),rows:[]};
+    unlocked=false;renderLogin();
+  };
+}
+function showClientWithAdminEntry(data){
+  if(data.pw){
+    document.getElementById('app').innerHTML=`
+      <main style="max-width:370px;margin:80px auto;">
+        <div class="card">
+          <h2 class="serif" style="text-align:center;border:none;">Enter Your Password</h2>
+          <p class="hint" style="text-align:center;">This link is private. Enter the password you were given to view your dosing schedule.</p>
+          <input id="cpwgate" type="password" placeholder="••••••••">
+          <button id="cpwgo" style="width:100%;">View My Schedule</button>
+          <div id="cpwerr" style="color:var(--danger);font-size:12px;margin-top:10px;text-align:center;display:none;">Incorrect password</div>
+        </div>
+      </main>`;
+    const go=()=>{
+      if(document.getElementById('cpwgate').value===data.pw){
+        renderClientView(data);
+        attachAdminEntry(data);
+      }else{
+        document.getElementById('cpwerr').style.display='block';
+      }
+    };
+    document.getElementById('cpwgo').onclick=go;
+    document.getElementById('cpwgate').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+    document.getElementById('cpwgate').focus();
+  }else{
+    renderClientView(data);
+    attachAdminEntry(data);
+  }
+}
+function route(){
+  const d=getPayload();
+  if(unlocked)renderAdmin();
+  else if(d)showClientWithAdminEntry(d);
+  else renderAdmin();
+}
+window.addEventListener('hashchange',route);
+route();
+</script>
+</body>
+</html>
